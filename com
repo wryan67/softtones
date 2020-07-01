@@ -1,1 +1,1 @@
-g++ -o softpwm softpwm.cpp -lwiringPi -lpthread && sudo ./softpwm 
+g++ -o softtones softtones.cpp -lwiringPi -lpthread && sudo ./softtones 
