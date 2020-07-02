@@ -4,10 +4,15 @@
 #include <unistd.h>
 
 //cc -o softpwm softpwm.c -lwiringPi -lpthread
-#define PIN 26
+#define PIN 27
 #define RANGE 512
 
-const char *notes[10] = {
+int yankeeDoodle[99] = {
+  5,5,6,7,5,7,6,0,5,5,6,7,5,0,4,0,5,5,6,7,8,7,6,5,4,2,3,4,5,0,5,0,-1
+};
+
+const char *noteNames[11] = {
+  ".",
   "G3",
   "C4",
   "D4",
@@ -20,7 +25,8 @@ const char *notes[10] = {
   "D5"
 };
 
-float noteHz[10] = {
+float noteHz[11] = {
+  0,        // rest
   195.9977, // G3
   261.6256, // C4
   293.6648, // D4
@@ -32,6 +38,33 @@ float noteHz[10] = {
   523.2511, // C5
   587.3295, // D5
 };
+
+
+void playTone(int tone, int duration) {
+  if (tone==0) {
+    printf(".\n");
+    delay(duration);
+    return;
+  }
+
+  double hz=noteHz[tone];
+  long us=(1000000/hz/2)-60;
+
+  printf("%s hz=%6.2lf us=%ld\n",noteNames[tone],hz,us);
+
+  long elapsed=0;
+  long now=millis(); 
+  long audibleDuration=duration*3/4;
+  
+  while (elapsed<audibleDuration) {
+    digitalWrite(PIN,0);
+    usleep(us);
+    digitalWrite(PIN,1);
+    usleep(us);
+    elapsed=millis()-now;
+  } 
+  delay(duration-audibleDuration);
+}
 
 int main()
 {
@@ -62,21 +95,8 @@ int main()
    printf("speaker on pin %d\n",PIN);
 
    
-   for (int i=0; i<10; ++i) {
-     double hz=noteHz[i];
-     long us=(1000000/hz/2)-60;
-
-     printf("%s hz=%6.2lf us=%ld\n",notes[i],hz,us);
-
-     long elapsed=0;
-     long now=millis(); 
-     while (elapsed<500) {
-       digitalWrite(PIN,0);
-       usleep(us);
-       digitalWrite(PIN,1);
-       usleep(us);
-       elapsed=millis()-now;
-     } 
+   for (int i=0; yankeeDoodle[i]>=0; ++i) {
+     playTone(yankeeDoodle[i], 400);
    }
 }
    
