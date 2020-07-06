@@ -170,6 +170,8 @@ int main()
     return 2;
   }
 
+  piHiPri(99);
+
   printf("Speaker out:  %d\n", SpearkerOut);
 
 
