@@ -16,7 +16,7 @@ Uses WiringPi for Raspberry Pi
 
 Use the com script to complie the programs, example:
 
-    $ com exClockTones
+    $ ./com exClockTones
     
 ## executing
 
