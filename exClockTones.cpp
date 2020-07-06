@@ -62,6 +62,7 @@ float noteHz[11] = {
   587.3295, // D5
 };
 
+char noteMessage[1024];
 
 pthread_t threadCreate(void *(*method)(void *), const char *description) {
 	pthread_t threadId;
@@ -85,6 +86,10 @@ unsigned long long currentTimeMillis() {
 }
 
 
+void* verbose(void*) {
+  printf("%s", noteMessage);
+  pthread_exit(NULL);
+}
 void play() {
   
   currentDuration+=clockTick;
@@ -98,7 +103,8 @@ void play() {
      float currentNote=noteHz[yankeeDoodle[playingNote]];
      long  usNote=(1000000/currentNote);
      swipe= usNote/2/clockTick;
-     printf("playingNote %2d--%s\n", playingNote, noteNames[yankeeDoodle[playingNote]]); fflush(stdout);
+     sprintf(noteMessage,"playingNote %2d--%s\n", playingNote, noteNames[yankeeDoodle[playingNote]]); fflush(stdout);
+     threadCreate(verbose,noteMessage);
   }
 
   ++sampleClockCounter;
@@ -115,6 +121,7 @@ void* takeSamplePolling(void*) {
     int    fd;
     char   buf[128];
 
+    pinMode(ClockInPin, INPUT);
     sprintf(buf, "gpio export %d in", ClockInPinBCM);
     system(buf);
     sprintf(buf, "/sys/class/gpio/gpio%d/value", ClockInPinBCM);
