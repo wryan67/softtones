@@ -4,10 +4,12 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
+#include <poll.h>
+
 
 //cc -o softpwm softpwm.c -lwiringPi -lpthread
-#define PIN 27
-#define RANGE 512
+int soundPin=29;  // ouput
 
 int yankeeDoodle[99] = {
   5,5,6,7,5,7,6,0,5,5,6,7,5,0,4,0,5,5,6,7,8,7,6,5,4,2,3,4,5,0,5,0,-1
@@ -188,9 +190,9 @@ void playTone(int tone, int duration) {
   long duty=us/2; 
 
   while (elapsed<audibleDuration) {
-    digitalWrite(PIN,0);
+    digitalWrite(soundPin,0);
     usleep(duty);
-    digitalWrite(PIN,1);
+    digitalWrite(soundPin,1);
     usleep(duty);
     elapsed=millis()-now;
   } 
@@ -204,17 +206,19 @@ int main()
     return 2;
   }
 
-  if (piHiPri(1)) {
-    printf("high priority failed\n");
-    return 2;
-  }
-
   printf("waiting for interrupts to clear...\n");
   delay(2000);
   interrupts(0);
 
-  pinMode(PIN, OUTPUT);
-  printf("speaker on pin %d\n",PIN);
+  if (piHiPri(1)) {
+    printf("high priority failed\n");
+    return 2;
+  }
+ 
+  setpriority(PRIO_PROCESS, getpid(), -20);
+
+  pinMode(soundPin, OUTPUT);
+  printf("speaker on pin %d\n",soundPin);
   
   for (int i=0; yankeeDoodle[i]>=0; ++i) {
     playTone(yankeeDoodle[i], 400);
