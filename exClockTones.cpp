@@ -27,8 +27,9 @@ static volatile long  sampleClockCounter = 0;
 static volatile long  swipe = 0;
 static volatile int   flap=0;
 static volatile int   playingNote=-1;
+static volatile bool  songOver=false;
 static volatile long  noteDuration= 400 * 1000; // us
-
+static volatile bool  holdMiddleC = false;
  
 int yankeeDoodle[99] = {
   5,5,6,7,5,7,6,0,5,5,6,7,5,0,4,0,5,5,6,7,8,7,6,5,4,2,3,4,5,0,5,0,-1
@@ -94,23 +95,32 @@ void play() {
   
   currentDuration+=clockTick;
   long cd = currentDuration+0.5;
+  float currentNote;
   
   if (cd>noteDuration) {
      currentDuration=0.0;
      if (yankeeDoodle[++playingNote]<0) {
-       exit(0);
+       songOver=true;
+       if (!holdMiddleC) {
+         exit(0);
+       }
+       playingNote--;
+       noteDuration=60000;
+       currentNote=261.6256; // C4
+     } else {
+       currentNote=noteHz[yankeeDoodle[playingNote]];
+       sprintf(noteMessage,"playingNote %2d--%s\n", playingNote, noteNames[yankeeDoodle[playingNote]]); fflush(stdout);
+       threadCreate(verbose,noteMessage);
      }
-     float currentNote=noteHz[yankeeDoodle[playingNote]];
+     
      long  usNote=(1000000/currentNote);
      swipe= usNote/2/clockTick;
-     sprintf(noteMessage,"playingNote %2d--%s\n", playingNote, noteNames[yankeeDoodle[playingNote]]); fflush(stdout);
-     threadCreate(verbose,noteMessage);
   }
 
   ++sampleClockCounter;
   if (sampleClockCounter%swipe==0) {
     flap=!flap;
-    if (currentDuration<noteDuration*3/4) {
+    if (songOver || currentDuration<noteDuration*3/4) {
       digitalWrite(SpearkerOut, flap);
     }
   }
